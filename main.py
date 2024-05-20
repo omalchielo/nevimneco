@@ -7,7 +7,7 @@ import smtplib
 
 # Přihlašovací údaje
 email = "omalchielo@gmail.com"
-password = "heslo"
+password = "xxx"
 
 # URL
 login_url = "https://kratochvilova.moje-autoskola.cz/"
@@ -82,6 +82,23 @@ def check_rides(session):
             print("Nepodařilo se najít informace o jízdách.")
             return False
 
+def send_status_email():
+    email_sender = "botrozvrh@gmail.com"
+    email_password = "ogkybntogxdmekzl"
+    email_receiver = ["omalchielo@gmail.com"]
+    subject = "Kód běží"
+    for receiver in email_receiver:
+        em = EmailMessage()
+        em.set_content("Kód běží")
+        em["Subject"] = subject
+        em["From"] = email_sender
+        em["To"] = receiver
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+            smtp.login(email_sender, email_password)
+            smtp.send_message(em)
+
 # Přihlášení na začátku
 if not login(session):
     print("Nepodařilo se přihlásit. Skript se ukončuje.")
@@ -89,11 +106,12 @@ if not login(session):
 
 # Hlavní smyčka pro pravidelnou kontrolu
 login_interval = 3600  # přihlásit každou hodinu
+status_email_interval = 3600  # poslat e-mail o stavu každou hodinu
 last_login_time = time.time()
+last_status_email_time = time.time()
 
 while True:
     try:
-        # Pokud uplynula hodina, přihlásit se znovu
         if time.time() - last_login_time > login_interval:
             if login(session):
                 last_login_time = time.time()
@@ -102,13 +120,16 @@ while True:
                 time.sleep(300)
                 continue
 
+        if time.time() - last_status_email_time > status_email_interval:
+            send_status_email()
+            last_status_email_time = time.time()
+
         if check_rides(session):
             print("Nové jízdy nalezeny!")
-            # Pokud naleznete nové jízdy, můžete zde přidat kód pro upozornění nebo jinou akci.
+
         else:
             print("Žádné nové jízdy nebyly nalezeny.")
     except Exception as e:
         print(f"Chyba při kontrole jízd: {e}")
 
-    # Počkejte 2 minuty před další kontrolou
     time.sleep(120)
