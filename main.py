@@ -7,7 +7,7 @@ import smtplib
 
 # Přihlašovací údaje
 email = "omalchielo@gmail.com"
-password = "7745802"
+password = "heslo"
 
 # URL
 login_url = "https://kratochvilova.moje-autoskola.cz/"
