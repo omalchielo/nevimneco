@@ -38,7 +38,7 @@ def login(session):
         print("Přihlášení bylo úspěšné.")
         return True
 
-def check_rides(session):
+def check_rides(session, previous_rides):
     # Získání stránky s jízdami
     rides_page = session.get(rides_url)
     soup = BeautifulSoup(rides_page.content, 'html.parser')
@@ -47,45 +47,49 @@ def check_rides(session):
     no_rides_message = "Nebyl nalezen žádný dostupný termín pro přímé naplánování jízdy."
     if no_rides_message in rides_page.text:
         print("Nebyl nalezen žádný dostupný termín pro přímé naplánování jízdy.")
-        return False
+        return False, previous_rides
     else:
         # Najít a vytisknout informace o jízdách
         rides_table = soup.find('div', {'class': 'tab-content'})
         if rides_table:
             table = rides_table.find('table', {'class': 'table'})
             if table:
-                rides_info = []
+                current_rides = []
                 for row in table.find_all('tr'):
                     columns = row.find_all('td')
                     if columns:
                         ride_info = [column.text.strip() for column in columns]
-                        rides_info.append(" | ".join(ride_info))
+                        current_rides.append(" | ".join(ride_info))
 
-                email_sender = "botrozvrh@gmail.com"
-                email_password = "ogkybntogxdmekzl"
-                email_receiver = ["omalchielo@gmail.com", "pospisild77@gmail.com"]
-                subject = "NOVÝ JÍZDY"  # Přidávání předmětu e-mailu
-                for receiver in email_receiver:
-                    em = EmailMessage()
-                    em.set_content("BYLY PŘIDÁNY NOVÉ JÍZDY:\n\n" + "\n".join(rides_info))
-                    em["Subject"] = subject  # Nastavení předmětu e-mailu
-                    em["From"] = email_sender
-                    em["To"] = receiver
+                if current_rides != previous_rides:
+                    email_sender = "botrozvrh@gmail.com"
+                    email_password = "ogkybntogxdmekzl"
+                    email_receiver = ["omalchielo@gmail.com", "pospisild77@gmail.com"]
+                    subject = "NOVÝ JÍZDY"  # Přidávání předmětu e-mailu
+                    for receiver in email_receiver:
+                        em = EmailMessage()
+                        em.set_content("BYLY PŘIDÁNY NOVÉ JÍZDY:\n\n" + "\n".join(current_rides))
+                        em["Subject"] = subject  # Nastavení předmětu e-mailu
+                        em["From"] = email_sender
+                        em["To"] = receiver
 
-                    context = ssl.create_default_context()
-                    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
-                        smtp.login(email_sender, email_password)
-                        smtp.send_message(em)
+                        context = ssl.create_default_context()
+                        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+                            smtp.login(email_sender, email_password)
+                            smtp.send_message(em)
 
-                for ride in rides_info:
-                    print(ride)
-                return True
+                    for ride in current_rides:
+                        print(ride)
+                    return True, current_rides
+                else:
+                    print("Žádné nové jízdy nebyly nalezeny.")
+                    return False, previous_rides
             else:
                 print("Nepodařilo se najít tabulku s jízdami.")
-                return False
+                return False, previous_rides
         else:
             print("Nepodařilo se najít informace o jízdách.")
-            return False
+            return False, previous_rides
 
 def send_status_email():
     email_sender = "botrozvrh@gmail.com"
@@ -134,6 +138,7 @@ login_interval = 3600  # přihlásit každou hodinu
 status_email_interval = 10800  # poslat e-mail o stavu každé tři hodiny
 last_login_time = time.time()
 last_status_email_time = time.time()
+previous_rides = []
 
 while True:
     try:
@@ -149,11 +154,9 @@ while True:
             send_status_email()
             last_status_email_time = time.time()
 
-        if check_rides(session):
+        rides_found, previous_rides = check_rides(session, previous_rides)
+        if rides_found:
             print("Nové jízdy nalezeny!")
-
-        else:
-            print("Žádné nové jízdy nebyly nalezeny.")
     except Exception as e:
         print(f"Chyba při kontrole jízd: {e}")
 
