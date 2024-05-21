@@ -7,7 +7,7 @@ import smtplib
 
 # Přihlašovací údaje
 email = "omalchielo@gmail.com"
-password = "xxx"
+password = "7745802"
 
 # URL
 login_url = "https://kratochvilova.moje-autoskola.cz/"
@@ -54,13 +54,20 @@ def check_rides(session):
         if rides_table:
             table = rides_table.find('table', {'class': 'table'})
             if table:
+                rides_info = []
+                for row in table.find_all('tr'):
+                    columns = row.find_all('td')
+                    if columns:
+                        ride_info = [column.text.strip() for column in columns]
+                        rides_info.append(" | ".join(ride_info))
+
                 email_sender = "botrozvrh@gmail.com"
                 email_password = "ogkybntogxdmekzl"
-                email_receiver = ["omalchielo@gmail.com"]
+                email_receiver = ["omalchielo@gmail.com", "pospisild77@gmail.com"]
                 subject = "NOVÝ JÍZDY"  # Přidávání předmětu e-mailu
                 for receiver in email_receiver:
                     em = EmailMessage()
-                    em.set_content("BYLY PŘIDÁNY NOVÉ JÍZDY")
+                    em.set_content("BYLY PŘIDÁNY NOVÉ JÍZDY:\n\n" + "\n".join(rides_info))
                     em["Subject"] = subject  # Nastavení předmětu e-mailu
                     em["From"] = email_sender
                     em["To"] = receiver
@@ -69,11 +76,9 @@ def check_rides(session):
                     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
                         smtp.login(email_sender, email_password)
                         smtp.send_message(em)
-                for row in table.find_all('tr'):
-                    columns = row.find_all('td')
-                    if columns:
-                        ride_info = [column.text.strip() for column in columns]
-                        print(" | ".join(ride_info))
+
+                for ride in rides_info:
+                    print(ride)
                 return True
             else:
                 print("Nepodařilo se najít tabulku s jízdami.")
@@ -99,14 +104,34 @@ def send_status_email():
             smtp.login(email_sender, email_password)
             smtp.send_message(em)
 
+def send_startup_email():
+    email_sender = "botrozvrh@gmail.com"
+    email_password = "ogkybntogxdmekzl"
+    email_receiver = ["omalchielo@gmail.com"]
+    subject = "Bot zapnut"
+    for receiver in email_receiver:
+        em = EmailMessage()
+        em.set_content("Bot byl úspěšně zapnut.")
+        em["Subject"] = subject
+        em["From"] = email_sender
+        em["To"] = receiver
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+            smtp.login(email_sender, email_password)
+            smtp.send_message(em)
+
 # Přihlášení na začátku
 if not login(session):
     print("Nepodařilo se přihlásit. Skript se ukončuje.")
     exit()
 
+# Poslat e-mail o úspěšném spuštění
+send_startup_email()
+
 # Hlavní smyčka pro pravidelnou kontrolu
 login_interval = 3600  # přihlásit každou hodinu
-status_email_interval = 3600  # poslat e-mail o stavu každou hodinu
+status_email_interval = 10800  # poslat e-mail o stavu každé tři hodiny
 last_login_time = time.time()
 last_status_email_time = time.time()
 
