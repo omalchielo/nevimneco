@@ -64,7 +64,7 @@ def check_rides(session, previous_rides):
                 if current_rides != previous_rides:
                     email_sender = "botrozvrh@gmail.com"
                     email_password = "ogkybntogxdmekzl"
-                    email_receiver = ["omalchielo@gmail.com", "pospisild77@gmail.com"]
+                    email_receiver = ["omalchielo@gmail.com"]
                     subject = "NOVÝ JÍZDY"  # Přidávání předmětu e-mailu
                     for receiver in email_receiver:
                         em = EmailMessage()
