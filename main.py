@@ -6,8 +6,8 @@ import ssl
 import smtplib
 
 # Přihlašovací údaje
-email = "omalchielo@gmail.com"
-password = "7745802"
+email = "-------email od autoskoly ----------------"
+password = "---------heslo od autoskoly ------------"
 
 # URL
 login_url = "https://kratochvilova.moje-autoskola.cz/"
@@ -17,20 +17,19 @@ rides_url = "https://kratochvilova.moje-autoskola.cz/zak_kalendar.php"
 session = requests.Session()
 
 def login(session):
-    # Načtení přihlašovací stránky pro získání potřebných cookies
+
     session.get(login_url)
 
-    # Data pro přihlášení
+
     login_data = {
         'log_email': email,
         'log_heslo': password,
         'akce': 'login'
     }
 
-    # Přihlášení
     response = session.post(login_url, data=login_data)
 
-    # Zkontrolování, zda bylo přihlášení úspěšné
+
     if "nepřihlášen" in response.text:
         print("Přihlášení se nezdařilo.")
         return False
@@ -39,17 +38,15 @@ def login(session):
         return True
 
 def check_rides(session, previous_rides):
-    # Získání stránky s jízdami
     rides_page = session.get(rides_url)
     soup = BeautifulSoup(rides_page.content, 'html.parser')
 
-    # Kontrola, zda jsou k dispozici nějaké jízdy
     no_rides_message = "Nebyl nalezen žádný dostupný termín pro přímé naplánování jízdy."
     if no_rides_message in rides_page.text:
         print("Nebyl nalezen žádný dostupný termín pro přímé naplánování jízdy.")
         return False, previous_rides
     else:
-        # Najít a vytisknout informace o jízdách
+
         rides_table = soup.find('div', {'class': 'tab-content'})
         if rides_table:
             table = rides_table.find('table', {'class': 'table'})
@@ -64,7 +61,7 @@ def check_rides(session, previous_rides):
                 if current_rides != previous_rides:
                     email_sender = "botrozvrh@gmail.com"
                     email_password = "ogkybntogxdmekzl"
-                    email_receiver = ["omalchielo@gmail.com"]
+                    email_receiver = ["--------------------- EMAILY KAM TO POSILA JIZDY -----------------------------------"]
                     subject = "NOVÝ JÍZDY"  # Přidávání předmětu e-mailu
                     for receiver in email_receiver:
                         em = EmailMessage()
@@ -94,7 +91,7 @@ def check_rides(session, previous_rides):
 def send_status_email():
     email_sender = "botrozvrh@gmail.com"
     email_password = "ogkybntogxdmekzl"
-    email_receiver = ["omalchielo@gmail.com"]
+    email_receiver = ["------------------- email kde se checkuje jestli kod bezi --------------------------"]
     subject = "Kód běží"
     for receiver in email_receiver:
         em = EmailMessage()
@@ -111,7 +108,7 @@ def send_status_email():
 def send_startup_email():
     email_sender = "botrozvrh@gmail.com"
     email_password = "ogkybntogxdmekzl"
-    email_receiver = ["omalchielo@gmail.com"]
+    email_receiver = ["-------------------------- email kdyz se bod zapne -----------------------------------"]
     subject = "Bot zapnut"
     for receiver in email_receiver:
         em = EmailMessage()
@@ -133,8 +130,7 @@ if not login(session):
 # Poslat e-mail o úspěšném spuštění
 send_startup_email()
 
-# Hlavní smyčka pro pravidelnou kontrolu
-login_interval = 3600  # přihlásit každou hodinu
+login_interval = 3600  
 status_email_interval = 10800  # poslat e-mail o stavu každé tři hodiny
 last_login_time = time.time()
 last_status_email_time = time.time()
